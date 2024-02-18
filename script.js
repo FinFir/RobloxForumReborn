@@ -28,12 +28,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Send the post to JSONPlaceholder
       savePostToJSONPlaceholder(title, content);
-
-      // Display the posts
-      displayRecentPosts();
-      
-      // Clear the form after submission
-      postForm.reset();
    }
 
    function savePostToJSONPlaceholder(title, content) {
@@ -49,8 +43,17 @@ document.addEventListener("DOMContentLoaded", function () {
             userId: 1,  // You can set a specific user ID
          }),
       })
-      .then(response => response.json())
-      .then(data => console.log('Post created:', data))
+      .then(response => {
+         if (!response.ok) {
+            throw new Error('Network response was not ok');
+         }
+         return response.json();
+      })
+      .then(data => {
+         console.log('Post created:', data);
+         // Display the posts
+         displayRecentPosts();
+      })
       .catch(error => console.error('Error creating post:', error));
    }
 
@@ -60,7 +63,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
       // Fetch posts from JSONPlaceholder API
       fetch('https://jsonplaceholder.typicode.com/posts')
-         .then(response => response.json())
+         .then(response => {
+            if (!response.ok) {
+               throw new Error('Network response was not ok');
+            }
+            return response.json();
+         })
          .then(posts => {
             posts.slice(-5).forEach(post => {
                const postElement = document.createElement("li");
