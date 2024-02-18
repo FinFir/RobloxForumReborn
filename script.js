@@ -26,64 +26,41 @@ document.addEventListener("DOMContentLoaded", function () {
       const title = document.getElementById("postTitle").value;
       const content = document.getElementById("postContent").value;
 
-      // Save the post to a GitHub Gist
-      savePostToGist(title, content);
+      // Save the post to local storage
+      savePostToLocalstorage(title, content);
    }
 
-   async function savePostToGist(title, content) {
-      const gistApiUrl = 'https://api.github.com/gists';
-      const response = await fetch(gistApiUrl, {
-         method: 'POST',
-         headers: {
-            'Content-Type': 'application/json',
-         },
-         body: JSON.stringify({
-            files: {
-               'post.json': {
-                  content: JSON.stringify({ title, content }),
-               },
-            },
-            public: true,
-         }),
-      });
+   function savePostToLocalstorage(title, content) {
+      const post = { title, content, timestamp: new Date().toLocaleString() };
 
-      if (response.ok) {
-         console.log('Post saved to Gist successfully');
-         // Display the posts
-         displayRecentPosts();
-         // Clear the form after submission
-         postForm.reset();
-      } else {
-         console.error('Error saving post to Gist');
-      }
+      // Retrieve existing posts from local storage
+      let savedPosts = JSON.parse(localStorage.getItem("forumPosts")) || [];
+
+      // Add the new post
+      savedPosts.push(post);
+
+      // Save the updated posts back to local storage
+      localStorage.setItem("forumPosts", JSON.stringify(savedPosts));
+
+      // Display the posts
+      displayRecentPosts();
+      
+      // Clear the form after submission
+      postForm.reset();
    }
 
    function displayRecentPosts() {
       // Clear existing posts
       postsList.innerHTML = "";
 
-      // Retrieve posts from the Gist API
-      const gistApiUrl = 'https://api.github.com/gists/public';
-      fetch(gistApiUrl)
-         .then(response => {
-            if (!response.ok) {
-               throw new Error('Network response was not ok');
-            }
-            return response.json();
-         })
-         .then(gists => {
-            gists.forEach(gist => {
-               const files = gist.files;
-               const postFile = files && files['post.json'];
-               if (postFile) {
-                  const post = JSON.parse(postFile.content);
-                  const postElement = document.createElement("li");
-                  postElement.innerHTML = `<strong>${post.title}</strong><p>${post.content}</p>`;
-                  postsList.appendChild(postElement);
-               }
-            });
-         })
-         .catch(error => console.error('Error fetching posts from Gist API:', error));
+      // Retrieve posts from local storage
+      const savedPosts = JSON.parse(localStorage.getItem("forumPosts")) || [];
+
+      savedPosts.forEach(post => {
+         const postElement = document.createElement("li");
+         postElement.innerHTML = `<strong>${post.title}</strong><p>${post.content}</p><small>${post.timestamp}</small>`;
+         postsList.appendChild(postElement);
+      });
    }
 
    displayCategories();
