@@ -1,6 +1,19 @@
 // script.js
 document.addEventListener("DOMContentLoaded", async function () {
-  // Include the IPFS library and initialize it
+  // Wait for the IPFS library to be loaded
+  await new Promise((resolve) => {
+    const checkLibraryLoaded = () => {
+      if (window.IpfsHttpClient) {
+        resolve();
+      } else {
+        setTimeout(checkLibraryLoaded, 100);
+      }
+    };
+
+    checkLibraryLoaded();
+  });
+
+  // Initialize IPFS
   const ipfs = window.IpfsHttpClient({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' });
 
   const categoriesSection = document.getElementById("categories");
