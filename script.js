@@ -1,69 +1,76 @@
 // script.js
 document.addEventListener("DOMContentLoaded", function () {
-   const categoriesSection = document.getElementById("categories");
-   const newPostSection = document.getElementById("newPost");
-   const postsList = document.getElementById("postsList");
-   const postForm = document.getElementById("postForm");
+  const postsList = document.getElementById("postsList");
+  const postForm = document.getElementById("postForm");
 
-   const categories = [
-      { name: "General Discussion", id: 1 },
-      { name: "Game Development", id: 2 },
-      // Add more categories as needed
-   ];
+  const ipfs = window.IpfsHttpClient({
+    host: 'ipfs.infura.io',
+    port: 5001,
+    protocol: 'https'
+  });
 
-   function displayCategories() {
-      categories.forEach(category => {
-         const categoryElement = document.createElement("div");
-         categoryElement.classList.add("category");
-         categoryElement.innerHTML = `<h2>${category.name}</h2>`;
-         categoryElement.addEventListener("click", () => { /* Handle category click */ });
-         categoriesSection.appendChild(categoryElement);
-      });
-   }
+  async function savePostToIPFS(title, content) {
+    const result = await ipfs.add(window.IpfsHttpClient.Buffer.from(content));
+    const postHash = result.cid.toString();
 
-   function handlePostSubmission(event) {
-      event.preventDefault();
-      const title = document.getElementById("postTitle").value;
-      const content = document.getElementById("postContent").value;
+    // Save the post hash locally
+    savePostHashLocally(title, postHash);
+  }
 
-      // Save the post to local storage
-      savePostToLocalstorage(title, content);
-   }
+  async function getAllPostsFromIPFS() {
+    const savedPosts = getSavedPostsLocally();
 
-   function savePostToLocalstorage(title, content) {
-      const post = { title, content, timestamp: new Date().toLocaleString() };
+    const posts = await Promise.all(savedPosts.map(async post => {
+      const content = await ipfs.cat(post.hash);
+      return {
+        title: post.title,
+        content: content.toString(),
+      };
+    }));
 
-      // Retrieve existing posts from local storage
-      let savedPosts = JSON.parse(localStorage.getItem("forumPosts")) || [];
+    return posts;
+  }
 
-      // Add the new post
-      savedPosts.push(post);
+  function savePostHashLocally(title, hash) {
+    const savedPosts = getSavedPostsLocally();
+    savedPosts.push({ title, hash });
+    localStorage.setItem('forumPosts', JSON.stringify(savedPosts));
+  }
 
-      // Save the updated posts back to local storage
-      localStorage.setItem("forumPosts", JSON.stringify(savedPosts));
+  function getSavedPostsLocally() {
+    return JSON.parse(localStorage.getItem('forumPosts')) || [];
+  }
 
-      // Display the posts
-      displayRecentPosts();
-      
-      // Clear the form after submission
-      postForm.reset();
-   }
+  async function displayRecentPosts() {
+    // Clear existing posts
+    postsList.innerHTML = "";
 
-   function displayRecentPosts() {
-      // Clear existing posts
-      postsList.innerHTML = "";
+    // Retrieve posts from IPFS
+    const savedPosts = await getAllPostsFromIPFS();
 
-      // Retrieve posts from local storage
-      const savedPosts = JSON.parse(localStorage.getItem("forumPosts")) || [];
+    savedPosts.forEach(post => {
+      const postElement = document.createElement("li");
+      postElement.innerHTML = `<strong>${post.title}</strong><p>${post.content}</p>`;
+      postsList.appendChild(postElement);
+    });
+  }
 
-      savedPosts.forEach(post => {
-         const postElement = document.createElement("li");
-         postElement.innerHTML = `<strong>${post.title}</strong><p>${post.content}</p><small>${post.timestamp}</small>`;
-         postsList.appendChild(postElement);
-      });
-   }
+  postForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
 
-   displayCategories();
-   displayRecentPosts();
-   postForm.addEventListener("submit", handlePostSubmission);
+    const title = document.getElementById("postTitle").value;
+    const content = document.getElementById("postContent").value;
+
+    // Simulate sending data to IPFS
+    await savePostToIPFS(title, content);
+
+    // Add the post to the recent posts list
+    displayRecentPosts();
+
+    // Clear the form after submission
+    postForm.reset();
+  });
+
+  // Display recent posts on page load
+  displayRecentPosts();
 });
