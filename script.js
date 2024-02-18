@@ -26,86 +26,49 @@ document.addEventListener("DOMContentLoaded", function () {
       const title = document.getElementById("postTitle").value;
       const content = document.getElementById("postContent").value;
 
-      // Simulate sending data to GitHub Issues
-      simulateServerPost(title, content);
-      // For a real implementation, send this data to GitHub Issues using AJAX or Fetch API
-   }
+      // Send the post to JSONPlaceholder
+      savePostToJSONPlaceholder(title, content);
 
-   function simulateServerPost(title, content) {
-      // Simulate server response
-      const post = { title, content, timestamp: new Date().toLocaleString() };
-
-      // Create a new GitHub Issue
-      createGitHubIssue(post);
-
+      // Display the posts
+      displayRecentPosts();
+      
       // Clear the form after submission
       postForm.reset();
    }
 
-   function createGitHubIssue(post) {
-      const apiUrl = 'https://api.github.com/FinFir/RobloxForumReborn/issues';
-      const accessToken = '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';  // Replace with your GitHub access token
-
-      // Send a POST request to create a new GitHub Issue
-      fetch(apiUrl, {
+   function savePostToJSONPlaceholder(title, content) {
+      // Use the JSONPlaceholder API to create a new post
+      fetch('https://jsonplaceholder.typicode.com/posts', {
          method: 'POST',
          headers: {
-            'Authorization': `token ${accessToken}`,
             'Content-Type': 'application/json',
          },
          body: JSON.stringify({
-            title: post.title,
-            body: post.content,
+            title: title,
+            body: content,
+            userId: 1,  // You can set a specific user ID
          }),
       })
       .then(response => response.json())
-      .then(data => {
-         console.log('GitHub Issue created:', data);
-
-         // Fetch and display updated posts from GitHub Issues
-         displayRecentPosts();
-      })
-      .catch(error => console.error('Error creating GitHub Issue:', error));
-   }
-
-   function fetchPostsFromGitHub() {
-      const apiUrl = 'https://api.github.com/FinFir/RobloxForumReborn/issues';
-      const accessToken = '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';  // Replace with your GitHub access token
-
-      // Fetch posts from GitHub Issues
-      return fetch(apiUrl, {
-         headers: {
-            'Authorization': `token ${accessToken}`,
-            'Content-Type': 'application/json',
-         },
-      })
-      .then(response => response.json())
-      .then(data => {
-         const posts = data.map(issue => ({
-            title: issue.title,
-            content: issue.body,
-            timestamp: new Date(issue.created_at).toLocaleString(),
-         }));
-         return posts;
-      })
-      .catch(error => {
-         console.error('Error fetching GitHub Issues:', error);
-         return [];
-      });
+      .then(data => console.log('Post created:', data))
+      .catch(error => console.error('Error creating post:', error));
    }
 
    function displayRecentPosts() {
       // Clear existing posts
       postsList.innerHTML = "";
 
-      // Fetch posts from GitHub Issues
-      fetchPostsFromGitHub().then(posts => {
-         posts.forEach(post => {
-            const postElement = document.createElement("li");
-            postElement.innerHTML = `<strong>${post.title}</strong><p>${post.content}</p><small>${post.timestamp}</small>`;
-            postsList.appendChild(postElement);
-         });
-      });
+      // Fetch posts from JSONPlaceholder API
+      fetch('https://jsonplaceholder.typicode.com/posts')
+         .then(response => response.json())
+         .then(posts => {
+            posts.slice(-5).forEach(post => {
+               const postElement = document.createElement("li");
+               postElement.innerHTML = `<strong>${post.title}</strong><p>${post.body}</p><small>${post.id}</small>`;
+               postsList.appendChild(postElement);
+            });
+         })
+         .catch(error => console.error('Error fetching posts:', error));
    }
 
    displayCategories();
