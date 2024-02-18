@@ -6,30 +6,16 @@
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <link rel="stylesheet" href="style.css">
    <title>Roblox Forum</title>
-   <!-- Include the IPFS library and initialize it -->
+   <!-- Include the IPFS library directly -->
    <script src="https://cdn.jsdelivr.net/npm/ipfs-http-client/dist/index.min.js"></script>
-   <script>
-     document.addEventListener('DOMContentLoaded', async function () {
-       const ipfs = window.IpfsHttpClient({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' });
-
-       // Your existing code goes here
-       const categoriesSection = document.getElementById("categories");
-       const postsList = document.getElementById("postsList");
-       const postForm = document.getElementById("postForm");
-       // ...
-
-       // Continue with the rest of your code here
-       // ...
-
-       // For example, you can continue with displaying categories:
-       displayCategories();
-     });
-   </script>
 </head>
 <body>
    <header>
       <h1>Welcome to Roblox Forum</h1>
    </header>
+   <section id="categories">
+      <!-- Forum categories go here -->
+   </section>
    <section id="newPost">
       <h2>Create a New Post</h2>
       <form id="postForm">
