@@ -41,6 +41,12 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   async function savePostToIPFS(title, content) {
+    // Check if ipfs is defined
+    if (!window.IpfsHttpClient) {
+      console.error('IPFS library not loaded.');
+      return;
+    }
+
     // Create a JavaScript object representing the post
     const post = { title, content, timestamp: new Date().toLocaleString() };
 
@@ -74,6 +80,12 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
 
   async function getAllPostsFromIPFS() {
+    // Check if ipfs is defined
+    if (!window.IpfsHttpClient) {
+      console.error('IPFS library not loaded.');
+      return [];
+    }
+
     // Get all posts from IPFS
     const posts = [];
 
