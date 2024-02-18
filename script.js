@@ -1,13 +1,28 @@
 // script.js
 document.addEventListener("DOMContentLoaded", function () {
+  const categoriesSection = document.getElementById("categories");
   const postsList = document.getElementById("postsList");
   const postForm = document.getElementById("postForm");
 
-  const ipfs = window.IpfsHttpClient({
-    host: 'ipfs.infura.io',
-    port: 5001,
-    protocol: 'https'
-  });
+  const categories = [
+    { name: "General Discussion", id: 1 },
+    { name: "Game Development", id: 2 },
+    // Add more categories as needed
+  ];
+
+  function displayCategories() {
+    categories.forEach(category => {
+      const categoryElement = document.createElement("div");
+      categoryElement.classList.add("category");
+      categoryElement.innerHTML = `<h2>${category.name}</h2>`;
+      categoryElement.addEventListener("click", () => { /* Handle category click */ });
+
+      // Ensure categoriesSection exists before appending
+      if (categoriesSection) {
+        categoriesSection.appendChild(categoryElement);
+      }
+    });
+  }
 
   async function savePostToIPFS(title, content) {
     const result = await ipfs.add(window.IpfsHttpClient.Buffer.from(content));
@@ -73,4 +88,5 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Display recent posts on page load
   displayRecentPosts();
+  displayCategories();  // Call this function to display categories
 });
