@@ -6,8 +6,11 @@
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <link rel="stylesheet" href="style.css">
    <title>Roblox Forum</title>
-   <!-- Include the IPFS library -->
+   <!-- Include the IPFS library and initialize it -->
    <script src="https://cdn.jsdelivr.net/npm/ipfs-http-client/dist/index.min.js"></script>
+   <script>
+     const ipfs = window.IpfsHttpClient({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' });
+   </script>
 </head>
 <body>
    <header>
