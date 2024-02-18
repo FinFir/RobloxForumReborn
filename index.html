@@ -9,7 +9,21 @@
    <!-- Include the IPFS library and initialize it -->
    <script src="https://cdn.jsdelivr.net/npm/ipfs-http-client/dist/index.min.js"></script>
    <script>
-     const ipfs = window.IpfsHttpClient({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' });
+     document.addEventListener('DOMContentLoaded', async function () {
+       const ipfs = window.IpfsHttpClient({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' });
+
+       // Your existing code goes here
+       const categoriesSection = document.getElementById("categories");
+       const postsList = document.getElementById("postsList");
+       const postForm = document.getElementById("postForm");
+       // ...
+
+       // Continue with the rest of your code here
+       // ...
+
+       // For example, you can continue with displaying categories:
+       displayCategories();
+     });
    </script>
 </head>
 <body>
