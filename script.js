@@ -65,10 +65,16 @@ document.addEventListener("DOMContentLoaded", function () {
       // Retrieve posts from the Gist API
       const gistApiUrl = 'https://api.github.com/gists/public';
       fetch(gistApiUrl)
-         .then(response => response.json())
+         .then(response => {
+            if (!response.ok) {
+               throw new Error('Network response was not ok');
+            }
+            return response.json();
+         })
          .then(gists => {
             gists.forEach(gist => {
-               const postFile = gist.files['post.json'];
+               const files = gist.files;
+               const postFile = files && files['post.json'];
                if (postFile) {
                   const post = JSON.parse(postFile.content);
                   const postElement = document.createElement("li");
