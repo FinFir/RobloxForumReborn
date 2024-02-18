@@ -35,24 +35,30 @@ document.addEventListener("DOMContentLoaded", function () {
       // Simulate server response
       const post = { title, content, timestamp: new Date().toLocaleString() };
 
-      // Add the post to the recent posts list
-      const postElement = document.createElement("li");
-      postElement.innerHTML = `<strong>${post.title}</strong><p>${post.content}</p><small>${post.timestamp}</small>`;
-      postsList.appendChild(postElement);
+      // Save the post to local storage
+      savePostToLocalstorage(post);
 
+      // Add the post to the recent posts list
+      displayRecentPosts();
+      
       // Clear the form after submission
       postForm.reset();
    }
 
-   function displayRecentPosts() {
-      // Simulate retrieving recent posts from the server
-      const samplePosts = [
-         { title: "First Post", content: "Hello, Roblox community!", timestamp: "2024-02-20 12:30 PM" },
-         { title: "Game Development Tips", content: "Share your game development insights here.", timestamp: "2024-02-21 10:45 AM" },
-         // Add more posts as needed
-      ];
+   function savePostToLocalstorage(post) {
+      let savedPosts = JSON.parse(localStorage.getItem("forumPosts")) || [];
+      savedPosts.push(post);
+      localStorage.setItem("forumPosts", JSON.stringify(savedPosts));
+   }
 
-      samplePosts.forEach(post => {
+   function displayRecentPosts() {
+      // Clear existing posts
+      postsList.innerHTML = "";
+
+      // Retrieve posts from local storage
+      const savedPosts = JSON.parse(localStorage.getItem("forumPosts")) || [];
+
+      savedPosts.forEach(post => {
          const postElement = document.createElement("li");
          postElement.innerHTML = `<strong>${post.title}</strong><p>${post.content}</p><small>${post.timestamp}</small>`;
          postsList.appendChild(postElement);
