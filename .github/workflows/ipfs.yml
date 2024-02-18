@@ -1,0 +1,35 @@
+name: Update IPFS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  updateIPFS:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set Up IPFS
+        run: docker run -d --name ipfs-node -p 4001:4001 -p 127.0.0.1:8080:8080 -p 127.0.0.1:5001:5001 ipfs/go-ipfs
+
+      - name: Add Content to IPFS
+        run: |
+          docker exec -it ipfs-node ipfs add -Q posts.txt > ipfs_hash.txt
+          cat ipfs_hash.txt
+          echo "::set-output name=ipfs_hash::$(cat ipfs_hash.txt)"
+
+      - name: Update JavaScript Code
+        run: |
+          sed -i "s/'your-ipfs-hash'/$(cat ipfs_hash.txt)/" script.js
+
+      - name: Commit and Push Changes
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add script.js
+          git commit -m "Update IPFS hash"
+          git push
