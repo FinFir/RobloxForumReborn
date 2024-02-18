@@ -26,57 +26,58 @@ document.addEventListener("DOMContentLoaded", function () {
       const title = document.getElementById("postTitle").value;
       const content = document.getElementById("postContent").value;
 
-      // Send the post to JSONPlaceholder
-      savePostToJSONPlaceholder(title, content);
+      // Save the post to a GitHub Gist
+      savePostToGist(title, content);
    }
 
-   function savePostToJSONPlaceholder(title, content) {
-      // Use the JSONPlaceholder API to create a new post
-      fetch('https://jsonplaceholder.typicode.com/posts', {
+   async function savePostToGist(title, content) {
+      const gistApiUrl = 'https://api.github.com/gists';
+      const response = await fetch(gistApiUrl, {
          method: 'POST',
          headers: {
             'Content-Type': 'application/json',
          },
          body: JSON.stringify({
-            title: title,
-            body: content,
-            userId: 1,  // You can set a specific user ID
+            files: {
+               'post.json': {
+                  content: JSON.stringify({ title, content }),
+               },
+            },
+            public: true,
          }),
-      })
-      .then(response => {
-         if (!response.ok) {
-            throw new Error('Network response was not ok');
-         }
-         return response.json();
-      })
-      .then(data => {
-         console.log('Post created:', data);
+      });
+
+      if (response.ok) {
+         console.log('Post saved to Gist successfully');
          // Display the posts
          displayRecentPosts();
-      })
-      .catch(error => console.error('Error creating post:', error));
+         // Clear the form after submission
+         postForm.reset();
+      } else {
+         console.error('Error saving post to Gist');
+      }
    }
 
    function displayRecentPosts() {
       // Clear existing posts
       postsList.innerHTML = "";
 
-      // Fetch posts from JSONPlaceholder API
-      fetch('https://jsonplaceholder.typicode.com/posts')
-         .then(response => {
-            if (!response.ok) {
-               throw new Error('Network response was not ok');
-            }
-            return response.json();
-         })
-         .then(posts => {
-            posts.slice(-5).forEach(post => {
-               const postElement = document.createElement("li");
-               postElement.innerHTML = `<strong>${post.title}</strong><p>${post.body}</p><small>${post.id}</small>`;
-               postsList.appendChild(postElement);
+      // Retrieve posts from the Gist API
+      const gistApiUrl = 'https://api.github.com/gists/public';
+      fetch(gistApiUrl)
+         .then(response => response.json())
+         .then(gists => {
+            gists.forEach(gist => {
+               const postFile = gist.files['post.json'];
+               if (postFile) {
+                  const post = JSON.parse(postFile.content);
+                  const postElement = document.createElement("li");
+                  postElement.innerHTML = `<strong>${post.title}</strong><p>${post.content}</p>`;
+                  postsList.appendChild(postElement);
+               }
             });
          })
-         .catch(error => console.error('Error fetching posts:', error));
+         .catch(error => console.error('Error fetching posts from Gist API:', error));
    }
 
    displayCategories();
