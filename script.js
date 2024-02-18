@@ -1,6 +1,10 @@
 // script.js
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
+  // Include the IPFS library and initialize it
+  const ipfs = window.IpfsHttpClient({ host: 'ipfs.infura.io', port: 5001, protocol: 'https' });
+
   const categoriesSection = document.getElementById("categories");
+  const newPostSection = document.getElementById("newPost");
   const postsList = document.getElementById("postsList");
   const postForm = document.getElementById("postForm");
 
@@ -16,77 +20,73 @@ document.addEventListener("DOMContentLoaded", function () {
       categoryElement.classList.add("category");
       categoryElement.innerHTML = `<h2>${category.name}</h2>`;
       categoryElement.addEventListener("click", () => { /* Handle category click */ });
-
-      // Ensure categoriesSection exists before appending
-      if (categoriesSection) {
-        categoriesSection.appendChild(categoryElement);
-      }
+      categoriesSection.appendChild(categoryElement);
     });
   }
 
+  async function handlePostSubmission(event) {
+    event.preventDefault();
+    const title = document.getElementById("postTitle").value;
+    const content = document.getElementById("postContent").value;
+
+    // Save post to IPFS
+    const postCID = await savePostToIPFS(title, content);
+
+    // For a real implementation, you might want to store the CID in a server or a decentralized database.
+
+    // Display the post
+    displayRecentPosts();
+    // Clear the form after submission
+    postForm.reset();
+  }
+
   async function savePostToIPFS(title, content) {
-    const result = await ipfs.add(window.IpfsHttpClient.Buffer.from(content));
-    const postHash = result.cid.toString();
+    // Create a JavaScript object representing the post
+    const post = { title, content, timestamp: new Date().toLocaleString() };
 
-    // Save the post hash locally
-    savePostHashLocally(title, postHash);
+    // Convert the post object to a JSON string
+    const postString = JSON.stringify(post);
+
+    // Convert the JSON string to a Uint8Array
+    const postData = new TextEncoder().encode(postString);
+
+    // Add the data to IPFS
+    const result = await ipfs.add(postData);
+
+    // The CID (Content ID) of the added data is in result.path
+    console.log("Post added to IPFS. CID:", result.path);
+
+    return result.path;
   }
 
-  async function getAllPostsFromIPFS() {
-    const savedPosts = getSavedPostsLocally();
-
-    const posts = await Promise.all(savedPosts.map(async post => {
-      const content = await ipfs.cat(post.hash);
-      return {
-        title: post.title,
-        content: content.toString(),
-      };
-    }));
-
-    return posts;
-  }
-
-  function savePostHashLocally(title, hash) {
-    const savedPosts = getSavedPostsLocally();
-    savedPosts.push({ title, hash });
-    localStorage.setItem('forumPosts', JSON.stringify(savedPosts));
-  }
-
-  function getSavedPostsLocally() {
-    return JSON.parse(localStorage.getItem('forumPosts')) || [];
-  }
-
-  async function displayRecentPosts() {
+  function displayRecentPosts() {
     // Clear existing posts
     postsList.innerHTML = "";
 
     // Retrieve posts from IPFS
-    const savedPosts = await getAllPostsFromIPFS();
-
-    savedPosts.forEach(post => {
-      const postElement = document.createElement("li");
-      postElement.innerHTML = `<strong>${post.title}</strong><p>${post.content}</p>`;
-      postsList.appendChild(postElement);
+    getAllPostsFromIPFS().then(posts => {
+      posts.forEach(post => {
+        const postElement = document.createElement("li");
+        postElement.innerHTML = `<strong>${post.title}</strong><p>${post.content}</p><small>${post.timestamp}</small>`;
+        postsList.appendChild(postElement);
+      });
     });
   }
 
-  postForm.addEventListener("submit", async function (event) {
-    event.preventDefault();
+  async function getAllPostsFromIPFS() {
+    // Get all posts from IPFS
+    const posts = [];
 
-    const title = document.getElementById("postTitle").value;
-    const content = document.getElementById("postContent").value;
+    for await (const file of ipfs.ls('/')) {
+      const content = await ipfs.cat(file.path);
+      const post = JSON.parse(new TextDecoder().decode(content));
+      posts.push(post);
+    }
 
-    // Simulate sending data to IPFS
-    await savePostToIPFS(title, content);
+    return posts;
+  }
 
-    // Add the post to the recent posts list
-    displayRecentPosts();
-
-    // Clear the form after submission
-    postForm.reset();
-  });
-
-  // Display recent posts on page load
+  displayCategories();
   displayRecentPosts();
-  displayCategories();  // Call this function to display categories
+  postForm.addEventListener("submit", handlePostSubmission);
 });
